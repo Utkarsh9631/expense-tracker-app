@@ -1,0 +1,82 @@
+/* src/styles/main.css */
+
+/* Smooth scrolling for anchor links */
+html { 
+  scroll-behavior: smooth; 
+}
+
+/* Body background */
+body { 
+  background: #f8fafc; 
+}
+
+/* Card styling */
+.card { 
+  border-radius: 10px; 
+}
+
+/* Navbar brand */
+.navbar-brand { 
+  letter-spacing: 0.2px;
+  font-weight: 600;
+}
+
+/* Landing page typography */
+.landing-hero .display-5 { 
+  line-height: 1.15; 
+}
+
+/* Feature icons */
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+/* Soft background sections */
+.bg-soft {
+  background-color: #fafafa;
+}
+
+/* Preview card */
+.preview-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.preview-card .card-body {
+  background: white;
+  border-radius: 8px;
+}
+
+/* Testimonial pills */
+.pill {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
+  font-weight: 600;
+  color: #666;
+}
+
+/* Navbar button alignment fix */
+.navbar .btn {
+  white-space: nowrap;
+}
+
+/* Responsive navbar improvements */
+@media (max-width: 991px) {
+  .navbar-collapse .ms-auto {
+    margin-top: 1rem;
+  }
+  
+  .navbar-collapse .btn {
+    width: 100%;
+    margin-left: 0 !important;
+    margin-top: 0.5rem;
+  }
+}
