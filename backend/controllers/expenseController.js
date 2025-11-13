@@ -38,4 +38,31 @@ exports.addExpense = async (req, res) => {
   }
 };
 
-// TODO: Add controllers for deleteExpense, updateExpense, etc.
+// @desc    Delete an expense
+// @route   DELETE /api/expenses/:id
+exports.deleteExpense = async (req, res) => {
+  try {
+    const expense = await Expense.findById(req.params.id);
+
+    // Check if expense exists
+    if (!expense) {
+      return res.status(404).json({ msg: 'Expense not found' });
+    }
+
+    // Check that the user owns this expense
+    if (expense.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized' });
+    }
+
+    // Find and remove the expense
+    await Expense.findByIdAndDelete(req.params.id);
+
+    res.json({ msg: 'Expense removed' });
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Expense not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+};

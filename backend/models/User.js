@@ -14,6 +14,12 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // --- ADD THIS ---
+  currency: {
+    type: String,
+    default: 'USD',
+  },
+  // --- END ---
 }, {
   timestamps: true, // Automatically adds 'createdAt' and 'updatedAt' fields
 });

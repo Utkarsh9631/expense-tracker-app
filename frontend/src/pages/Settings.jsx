@@ -1,78 +1,192 @@
 // src/pages/Settings.jsx
-import React, { useState } from "react";
-import { Card, Form, Button } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Card, Form, Button, Alert, Row, Col } from "react-bootstrap";
+import { useAppContext } from "../context/AppContext";
 
 export default function Settings() {
-  const [form, setForm] = useState({
-    name: "John Doe",
-    email: "john@example.com",
+  const { user, updateUserDetails, changePassword, appError, clearError } = useAppContext();
+
+  // State for forms
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
     currency: "USD",
-    notifications: true
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
-  const onChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setForm({ ...form, [e.target.name]: value });
+  // State for alerts
+  const [profileMsg, setProfileMsg] = useState({ type: "", text: "" });
+  const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" });
+
+  // Populate form when user data loads
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || "",
+        email: user.email || "",
+        currency: user.currency || "USD",
+      });
+    }
+  }, [user]);
+
+  // Clear errors when component unmounts
+  useEffect(() => {
+    return () => {
+      clearError();
+      setProfileMsg({ type: "", text: "" });
+      setPasswordMsg({ type: "", text: "" });
+    };
+  }, [clearError]);
+
+
+  const onProfileChange = (e) => {
+    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
   };
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    alert("Settings saved!");
+  const onPasswordChange = (e) => {
+    setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
   };
+
+  // --- Profile Submit Handler ---
+  const onProfileSubmit = async (e) => {
+    e.preventDefault();
+    setProfileMsg({ type: "", text: "" });
+    clearError();
+    try {
+      await updateUserDetails(profileForm);
+      setProfileMsg({ type: "success", text: "Profile updated successfully!" });
+    } catch (err) {
+      // appError is set by the context
+    }
+  };
+
+  // --- Password Submit Handler ---
+  const onPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordMsg({ type: "", text: "" });
+    clearError();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMsg({ type: "danger", text: "New passwords do not match" });
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMsg({ type: "danger", text: "Password must be at least 6 characters" });
+      return;
+    }
+
+    try {
+      await changePassword(passwordForm.oldPassword, passwordForm.newPassword);
+      setPasswordMsg({ type: "success", text: "Password changed successfully!" });
+      setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      // appError is set by the context
+    }
+  };
+
 
   return (
     <div>
       <h2 className="mb-4">Settings</h2>
+      <Row className="g-4">
+        {/* --- Profile Settings Card --- */}
+        <Col md={6}>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <h5 className="mb-3">Profile Settings</h5>
+              {/* General App Error (like "Email already in use") */}
+              {appError && <Alert variant="danger">{appError}</Alert>}
+              {/* Specific success/error message for this form */}
+              {profileMsg.text && <Alert variant={profileMsg.type}>{profileMsg.text}</Alert>}
+              
+              <Form onSubmit={onProfileSubmit}>
+                <Form.Group className="mb-3" controlId="name">
+                  <Form.Label>Name</Form.Label>
+                  <Form.Control
+                    name="name"
+                    value={profileForm.name}
+                    onChange={onProfileChange}
+                    placeholder="Your name"
+                  />
+                </Form.Group>
 
-      <Card className="shadow-sm" style={{maxWidth: 600}}>
-        <Card.Body>
-          <h5 className="mb-3">Profile Settings</h5>
-          <Form onSubmit={onSubmit}>
-            <Form.Group className="mb-3" controlId="name">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                name="name"
-                value={form.name}
-                onChange={onChange}
-                placeholder="Your name"
-              />
-            </Form.Group>
+                <Form.Group className="mb-3" controlId="email">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    name="email"
+                    type="email"
+                    value={profileForm.email}
+                    onChange={onProfileChange}
+                    placeholder="your@email.com"
+                  />
+                </Form.Group>
 
-            <Form.Group className="mb-3" controlId="email">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={onChange}
-                placeholder="your@email.com"
-              />
-            </Form.Group>
+                <Form.Group className="mb-3" controlId="currency">
+                  <Form.Label>Currency</Form.Label>
+                  <Form.Select name="currency" value={profileForm.currency} onChange={onProfileChange}>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="INR">INR (₹)</option>
+                  </Form.Select>
+                </Form.Group>
 
-            <Form.Group className="mb-3" controlId="currency">
-              <Form.Label>Currency</Form.Label>
-              <Form.Select name="currency" value={form.currency} onChange={onChange}>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="INR">INR (₹)</option>
-              </Form.Select>
-            </Form.Group>
+                <Button type="submit" variant="primary">Save Changes</Button>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
 
-            <Form.Group className="mb-3" controlId="notifications">
-              <Form.Check
-                type="checkbox"
-                name="notifications"
-                label="Enable email notifications"
-                checked={form.notifications}
-                onChange={onChange}
-              />
-            </Form.Group>
+        {/* --- Change Password Card --- */}
+        <Col md={6}>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <h5 className="mb-3">Change Password</h5>
+              {passwordMsg.text && <Alert variant={passwordMsg.type}>{passwordMsg.text}</Alert>}
+              
+              <Form onSubmit={onPasswordSubmit}>
+                <Form.Group className="mb-3" controlId="oldPassword">
+                  <Form.Label>Old Password</Form.Label>
+                  <Form.Control
+                    name="oldPassword"
+                    type="password"
+                    value={passwordForm.oldPassword}
+                    onChange={onPasswordChange}
+                    placeholder="••••••••"
+                  />
+                </Form.Group>
 
-            <Button type="submit" variant="primary">Save Settings</Button>
-          </Form>
-        </Card.Body>
-      </Card>
+                <Form.Group className="mb-3" controlId="newPassword">
+                  <Form.Label>New Password</Form.Label>
+                  <Form.Control
+                    name="newPassword"
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={onPasswordChange}
+                    placeholder="New password (min. 6 chars)"
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="confirmPassword">
+                  <Form.Label>Confirm New Password</Form.Label>
+                  <Form.Control
+                    name="confirmPassword"
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={onPasswordChange}
+                    placeholder="Confirm new password"
+                  />
+                </Form.Group>
+
+                <Button type="submit" variant="primary">Change Password</Button>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }

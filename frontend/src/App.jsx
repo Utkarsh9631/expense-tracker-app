@@ -4,7 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import NavbarComp from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToHash from "./components/ScrollToHash";
-import ProtectedRoute from "./components/ProtectedRoute"; // <-- Import
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
@@ -14,6 +14,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import NotFound from "./pages/NotFound"; // <-- 1. Import the new page
 
 function App() {
   return (
@@ -36,7 +37,9 @@ function App() {
             <Route path="/settings" element={<Settings />} />
           </Route>
           
-          {/* TODO: Add a 404 Not Found route */}
+          {/* --- 404 Not Found Route --- */}
+          {/* 2. Add this line at the very end */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />

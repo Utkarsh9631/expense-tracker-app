@@ -1,6 +1,6 @@
 // src/pages/AddBudget.jsx
 import React, { useState } from "react";
-import { Card, Form, Button } from "react-bootstrap";
+import { Card, Form, Button, Alert } from "react-bootstrap"; // <-- Import Alert
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
@@ -10,24 +10,34 @@ export default function AddBudget() {
     amount: "",
     period: "monthly"
   });
+  const [error, setError] = useState(""); // <-- Add error state
   const { addBudget } = useAppContext();
   const navigate = useNavigate();
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   
-  const onSubmit = (e) => {
+  // Make onSubmit async and add error handling
+  const onSubmit = async (e) => {
     e.preventDefault();
-    addBudget({
-      ...form,
-      amount: parseFloat(form.amount)
-    });
-    navigate("/dashboard");
+    setError(""); // Clear old errors
+    try {
+      // This is now an API call
+      await addBudget({
+        ...form,
+        amount: parseFloat(form.amount)
+      });
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to add budget. Please try again.");
+    }
   };
 
   return (
     <Card className="mx-auto shadow-sm" style={{maxWidth: 600}}>
       <Card.Body>
         <h4 className="mb-4">Set Budget</h4>
+        {error && <Alert variant="danger">{error}</Alert>} {/* <-- Add this line */}
         <Form onSubmit={onSubmit}>
           <Form.Group className="mb-3" controlId="category">
             <Form.Label>Category</Form.Label>

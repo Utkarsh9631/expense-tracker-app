@@ -5,13 +5,16 @@ import { Navbar, Container, Nav, Button, NavDropdown } from "react-bootstrap";
 import { useAppContext } from "../context/AppContext";
 
 export default function NavbarComp() {
-  const { isAuthenticated, logout } = useAppContext();
+  const { isAuthenticated, logout, user } = useAppContext(); // <-- Get user object
   const navigate = useNavigate();
 
   const onLogout = () => {
     logout();
     navigate("/login");
   };
+  
+  // Use user's name if available, otherwise "Account"
+  const accountTitle = user ? user.name : "Account";
 
   // Conditionally render links
   const authLinks = (
@@ -25,7 +28,8 @@ export default function NavbarComp() {
         <NavDropdown.Item as={NavLink} to="/add-budget">Add Budget</NavDropdown.Item>
       </NavDropdown>
 
-      <NavDropdown title="Account" id="account-dropdown" align="end">
+      {/* --- Updated this line --- */}
+      <NavDropdown title={accountTitle} id="account-dropdown" align="end">
         <NavDropdown.Item as={NavLink} to="/settings">Settings</NavDropdown.Item>
         <NavDropdown.Divider />
         <NavDropdown.Item onClick={onLogout}>

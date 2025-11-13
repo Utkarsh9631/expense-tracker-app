@@ -1,27 +1,30 @@
 // src/pages/Dashboard.jsx
-import React, { useEffect } from "react"; // Import useEffect
+import React, { useEffect } from "react";
 import { Card, Row, Col, Button, Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
 export default function Dashboard() {
-  // Get expenses, budgets AND the functions to fetch them
-  const { expenses, budgets, getExpenses, getBudgets } = useAppContext();
+  // Get expenses, budgets AND the functions to fetch/delete
+  const { expenses, budgets, getExpenses, getBudgets, deleteExpense } = useAppContext(); // <-- Add deleteExpense
   const navigate = useNavigate();
 
-  // --- ADD THIS useEffect ---
-  // This tells React to fetch data from the API when the page loads
   useEffect(() => {
     getExpenses();
     getBudgets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // The empty array [] means this runs only once on mount
+  }, []);
 
-  // Your existing calculations will now work with API data
+  // --- Add this handler ---
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this expense?")) {
+      await deleteExpense(id);
+    }
+  };
+
   const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
   
-  // Format date nicely (optional, but good)
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
@@ -41,8 +44,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ... Card components ... */}
       <Row className="g-3 mb-4">
-        {/* ... Card components ... */}
         <Col md={4}>
           <Card className="shadow-sm">
             <Card.Body>
@@ -84,16 +87,26 @@ export default function Dashboard() {
                   <th>Description</th>
                   <th>Category</th>
                   <th>Amount</th>
+                  <th>Actions</th> {/* <-- Add Actions header */}
                 </tr>
               </thead>
               <tbody>
-                {/* Use the MongoDB _id for the key */}
                 {expenses.slice(0, 10).map((exp) => (
                   <tr key={exp._id}> 
                     <td>{formatDate(exp.date)}</td>
                     <td>{exp.description}</td>
                     <td><span className="badge bg-secondary">{exp.category}</span></td>
                     <td>${exp.amount?.toFixed(2)}</td>
+                    <td>
+                      {/* --- Add Delete Button --- */}
+                      <Button 
+                        variant="danger" 
+                        size="sm" 
+                        onClick={() => handleDelete(exp._id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
