@@ -12,6 +12,7 @@ const initialState = {
   expenses: [],
   budgets: [],
   appError: null, // <-- Renamed 'error' to 'appError' for clarity
+  theme: localStorage.getItem("theme") || "light",
 };
 
 function appReducer(state, action) {
@@ -62,6 +63,13 @@ function appReducer(state, action) {
         ...state,
         expenses: state.expenses.filter((exp) => exp._id !== action.payload),
       };
+    case "SET_THEME":
+      const newTheme = state.theme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', newTheme);
+      return {
+        ...state,
+        theme: newTheme,
+      };
     case "SET_BUDGETS":
       return { ...state, budgets: action.payload };
     case "ADD_BUDGET":
@@ -79,9 +87,11 @@ function appReducer(state, action) {
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
-
+  
   // --- NEW: Wrap all functions in useCallback ---
-
+useEffect(() => {
+    document.documentElement.setAttribute('data-bs-theme', state.theme);
+  }, [state.theme]);
   const loadUser = useCallback(async () => {
     if (localStorage.token) {
       try {
@@ -181,13 +191,16 @@ export function AppProvider({ children }) {
       throw err;
     }
   }, []);
-
+const toggleTheme = useCallback(() => {
+    dispatch({ type: 'SET_THEME' });
+  }, []);
   const clearError = useCallback(() => dispatch({ type: 'CLEAR_ERROR' }), []);
 
   // --- End of useCallback updates ---
 
   const value = {
     ...state,
+    toggleTheme,
     register,
     login,
     logout,

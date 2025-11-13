@@ -5,9 +5,11 @@ html {
   scroll-behavior: smooth; 
 }
 
-/* Body background */
+/* * REMOVED the static background color from 'body'
+ * It is now controlled by index.css
+*/
 body { 
-  background: #f8fafc; 
+  /* background: #f8fafc; */ /* <-- This line was removed */
 }
 
 /* Card styling */
@@ -34,9 +36,11 @@ body {
   color: #1976d2;
 }
 
-/* Soft background sections */
+/* * --- THIS IS THE FIX for landing page sections --- 
+ * Use Bootstrap's variable for a "soft" background
+*/
 .bg-soft {
-  background-color: #fafafa;
+  background-color: var(--bs-tertiary-bg);
 }
 
 /* Preview card */

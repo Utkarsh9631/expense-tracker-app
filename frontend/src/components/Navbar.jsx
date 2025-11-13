@@ -1,11 +1,13 @@
 // src/components/Navbar.jsx
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Navbar, Container, Nav, Button, NavDropdown } from "react-bootstrap";
+// 1. Import Form
+import { Navbar, Container, Nav, Button, NavDropdown, Form } from "react-bootstrap"; 
 import { useAppContext } from "../context/AppContext";
 
 export default function NavbarComp() {
-  const { isAuthenticated, logout, user } = useAppContext(); // <-- Get user object
+  // 2. Get theme and toggleTheme from context
+  const { isAuthenticated, logout, user, theme, toggleTheme } = useAppContext();
   const navigate = useNavigate();
 
   const onLogout = () => {
@@ -13,22 +15,31 @@ export default function NavbarComp() {
     navigate("/login");
   };
   
-  // Use user's name if available, otherwise "Account"
   const accountTitle = user ? user.name : "Account";
 
-  // Conditionally render links
+  // 3. Define the theme toggle switch component
+  const themeToggle = (
+    <Form.Check
+      type="switch"
+      id="theme-switch"
+      // Use emoji for a simple icon
+      label={theme === 'light' ? '🌙' : '☀️'}
+      checked={theme === 'dark'}
+      onChange={toggleTheme}
+      className="ms-lg-3"
+    />
+  );
+
   const authLinks = (
     <>
       <Nav.Link as={NavLink} to="/dashboard">Dashboard</Nav.Link>
       <Nav.Link as={NavLink} to="/analytics">Analytics</Nav.Link>
       
-      {/* Links you requested */}
       <NavDropdown title="Actions" id="actions-dropdown">
         <NavDropdown.Item as={NavLink} to="/add-expense">Add Expense</NavDropdown.Item>
         <NavDropdown.Item as={NavLink} to="/add-budget">Add Budget</NavDropdown.Item>
       </NavDropdown>
 
-      {/* --- Updated this line --- */}
       <NavDropdown title={accountTitle} id="account-dropdown" align="end">
         <NavDropdown.Item as={NavLink} to="/settings">Settings</NavDropdown.Item>
         <NavDropdown.Divider />
@@ -41,7 +52,6 @@ export default function NavbarComp() {
 
   const guestLinks = (
     <>
-      {/* Anchor links to landing page sections */}
       <Nav.Link href="/#features">Features</Nav.Link>
       <Nav.Link href="/#pricing">Pricing</Nav.Link>
       <Nav.Link as={NavLink} to="/login" className="ms-lg-2">Login</Nav.Link>
@@ -51,14 +61,24 @@ export default function NavbarComp() {
     </>
   );
 
-  return (
-    <Navbar expand="lg" bg="light" variant="light" className="shadow-sm sticky-top">
+return (
+    <Navbar 
+      expand="lg" 
+      // --- THIS IS THE FIX ---
+      // Use the theme state to set the props dynamically
+      bg={theme} 
+      variant={theme} 
+      // --- END OF FIX ---
+      className="shadow-sm sticky-top"
+    >
       <Container>
         <Navbar.Brand as={NavLink} to="/" className="fw-bold">ExpensePro</Navbar.Brand>
         <Navbar.Toggle aria-controls="main-navbar" />
         <Navbar.Collapse id="main-navbar">
           <Nav className="ms-auto d-flex align-items-center gap-2">
             {isAuthenticated ? authLinks : guestLinks}
+            {/* 4. Add the toggle switch to the navbar */}
+            {themeToggle}
           </Nav>
         </Navbar.Collapse>
       </Container>
