@@ -1,27 +1,52 @@
 // src/pages/AddBudget.jsx
-import React, { useState } from "react";
-import { Card, Form, Button, Alert } from "react-bootstrap"; // <-- Import Alert
+import React, { useState, useEffect } from "react"; // <-- Import useEffect
+import { Card, Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
 export default function AddBudget() {
+  // --- UPDATED to include categories ---
+  const { 
+    addBudget, 
+    categories, // <-- Get categories
+    getCategories // <-- Get fetch function
+  } = useAppContext();
+  
   const [form, setForm] = useState({
-    category: "Food",
+    category: "", // <-- Set to empty
     amount: "",
     period: "monthly"
   });
-  const [error, setError] = useState(""); // <-- Add error state
-  const { addBudget } = useAppContext();
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // --- ADDED: Fetch categories if needed ---
+  useEffect(() => {
+    if (categories.length === 0) {
+      getCategories();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Runs once on load
+
+  // --- UPDATED: Set default category from context ---
+  useEffect(() => {
+    if (categories.length > 0 && !form.category) {
+      setForm(f => ({ ...f, category: categories[0].name }));
+    }
+  }, [categories, form.category]);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   
-  // Make onSubmit async and add error handling
   const onSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear old errors
+    setError("");
+
+    if (!form.category) {
+      setError("Please select a category.");
+      return;
+    }
+
     try {
-      // This is now an API call
       await addBudget({
         ...form,
         amount: parseFloat(form.amount)
@@ -33,21 +58,24 @@ export default function AddBudget() {
     }
   };
 
+  // --- Define a default list in case categories are still loading ---
+  const defaultCategories = ["Food", "Transport", "Entertainment", "Utilities", "Shopping", "Other"];
+  const categoryList = categories.length > 0 ? categories.map(c => c.name) : defaultCategories;
+
   return (
     <Card className="mx-auto shadow-sm" style={{maxWidth: 600}}>
       <Card.Body>
         <h4 className="mb-4">Set Budget</h4>
-        {error && <Alert variant="danger">{error}</Alert>} {/* <-- Add this line */}
+        {error && <Alert variant="danger">{error}</Alert>}
         <Form onSubmit={onSubmit}>
+          {/* --- UPDATED CATEGORY DROPDOWN --- */}
           <Form.Group className="mb-3" controlId="category">
             <Form.Label>Category</Form.Label>
-            <Form.Select name="category" value={form.category} onChange={onChange}>
-              <option value="Food">Food</option>
-              <option value="Transport">Transport</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Utilities">Utilities</option>
-              <option value="Shopping">Shopping</option>
-              <option value="Other">Other</option>
+            <Form.Select name="category" value={form.category} onChange={onChange} required>
+              <option value="" disabled>-- Select a Category --</option>
+              {categoryList.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </Form.Select>
           </Form.Group>
 

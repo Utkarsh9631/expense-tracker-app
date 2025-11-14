@@ -38,6 +38,42 @@ exports.addExpense = async (req, res) => {
   }
 };
 
+// --- ADD THIS FUNCTION ---
+// @desc    Update an expense
+// @route   PUT /api/expenses/:id
+exports.updateExpense = async (req, res) => {
+  const { description, amount, category, date } = req.body;
+
+  try {
+    let expense = await Expense.findById(req.params.id);
+
+    if (!expense) {
+      return res.status(404).json({ msg: 'Expense not found' });
+    }
+
+    // Ensure user owns the expense
+    if (expense.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized' });
+    }
+
+    // Update the fields
+    expense.description = description || expense.description;
+    expense.amount = amount || expense.amount;
+    expense.category = category || expense.category;
+    expense.date = date || expense.date;
+
+    const updatedExpense = await expense.save();
+    res.json(updatedExpense);
+
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Expense not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+};
+
 // @desc    Delete an expense
 // @route   DELETE /api/expenses/:id
 exports.deleteExpense = async (req, res) => {

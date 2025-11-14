@@ -11,6 +11,8 @@ const initialState = {
   isLoading: true,
   expenses: [],
   budgets: [],
+  categories: [],
+  recurring: [],
   appError: null, // <-- Renamed 'error' to 'appError' for clarity
   theme: localStorage.getItem("theme") || "light",
 };
@@ -65,6 +67,15 @@ function appReducer(state, action) {
         ...state,
         expenses: state.expenses.filter((exp) => exp._id !== action.payload),
       };
+    // --- ADD THIS CASE ---
+    case "UPDATE_EXPENSE":
+      return {
+        ...state,
+        expenses: state.expenses.map((exp) =>
+          exp._id === action.payload._id ? action.payload : exp
+        ),
+      };
+    // --- END OF ADDED CASE ---
     case "SET_THEME":
       const newTheme = state.theme === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', newTheme);
@@ -76,6 +87,31 @@ function appReducer(state, action) {
       return { ...state, budgets: action.payload };
     case "ADD_BUDGET":
       return { ...state, budgets: [action.payload, ...state.budgets] };
+
+    // --- ADD THESE CASES ---
+    case "SET_CATEGORIES":
+      return { ...state, categories: action.payload };
+    case "ADD_CATEGORY":
+      return { ...state, categories: [action.payload, ...state.categories] };
+    case "DELETE_CATEGORY":
+      return {
+        ...state,
+        categories: state.categories.filter((cat) => cat._id !== action.payload),
+      };
+    // --- END OF ADDED CASES ---
+      
+      // --- ADD THESE CASES ---
+    case "SET_RECURRING":
+      return { ...state, recurring: action.payload };
+    case "ADD_RECURRING":
+      return { ...state, recurring: [action.payload, ...state.recurring] };
+    case "DELETE_RECURRING":
+      return {
+        ...state,
+        recurring: state.recurring.filter((r) => r._id !== action.payload),
+      };
+    // --- END OF ADDED CASES ---
+
     case "DATA_ERROR": // General data error
       return { ...state, appError: action.payload };
     case "CLEAR_ERROR": // <-- New case
@@ -184,6 +220,18 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  // --- ADD THIS FUNCTION ---
+const updateExpense = useCallback(async (id, expenseData) => {
+  try {
+    const res = await api.put(`/expenses/${id}`, expenseData);
+    dispatch({ type: "UPDATE_EXPENSE", payload: res.data });
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    throw err; // Re-throw so the form can catch it
+  }
+}, []);
+// --- END OF ADDED FUNCTION ---
+
   const getBudgets = useCallback(async () => {
     try {
       const res = await api.get('/budgets');
@@ -202,6 +250,78 @@ export function AppProvider({ children }) {
       throw err;
     }
   }, []);
+
+  // --- ADD THESE FUNCTIONS ---
+const getCategories = useCallback(async () => {
+  try {
+    const res = await api.get('/categories');
+    dispatch({ type: 'SET_CATEGORIES', payload: res.data });
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+  }
+}, []);
+
+const addCategory = useCallback(async (name) => {
+  try {
+    const res = await api.post('/categories', { name });
+    dispatch({ type: 'ADD_CATEGORY', payload: res.data });
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    throw err;
+  }
+}, []);
+
+const deleteCategory = useCallback(async (id) => {
+  try {
+    await api.delete(`/categories/${id}`);
+    dispatch({ type: 'DELETE_CATEGORY', payload: id });
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    throw err;
+  }
+}, []);
+// --- END OF ADDED FUNCTIONS ---
+
+  // --- ADD THESE FUNCTIONS ---
+const getRecurring = useCallback(async () => {
+  try {
+    const res = await api.get('/recurring');
+    dispatch({ type: 'SET_RECURRING', payload: res.data });
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+  }
+}, []);
+
+const addRecurring = useCallback(async (data) => {
+  try {
+    const res = await api.post('/recurring', data);
+    dispatch({ type: 'ADD_RECURRING', payload: res.data });
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    throw err;
+  }
+}, []);
+
+const deleteRecurring = useCallback(async (id) => {
+  try {
+    await api.delete(`/recurring/${id}`);
+    dispatch({ type: 'DELETE_RECURRING', payload: id });
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    throw err;
+  }
+}, []);
+
+const processRecurringExpenses = useCallback(async () => {
+  try {
+    // This just tells the backend to work its magic
+    const res = await api.post('/recurring/process');
+    return res.data; // Returns { msg: '...', expensesCreated: N }
+  } catch (err) {
+    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+  }
+}, []);
+// --- END OF ADDED FUNCTIONS ---
 
   const toggleTheme = useCallback(() => {
     dispatch({ type: 'SET_THEME' });
@@ -224,8 +344,16 @@ export function AppProvider({ children }) {
     getExpenses,
     addExpense,
     deleteExpense,
+    updateExpense,
     getBudgets,
     addBudget,
+    getCategories,
+    addCategory,
+    deleteCategory,
+    getRecurring,
+    addRecurring,
+    deleteRecurring,
+    processRecurringExpenses,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

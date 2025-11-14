@@ -35,9 +35,12 @@ export default function NavbarComp() {
       <Nav.Link as={NavLink} to="/dashboard">Dashboard</Nav.Link>
       <Nav.Link as={NavLink} to="/analytics">Analytics</Nav.Link>
       
+      {/* --- THIS DROPDOWN IS UPDATED --- */}
       <NavDropdown title="Actions" id="actions-dropdown">
         <NavDropdown.Item as={NavLink} to="/add-expense">Add Expense</NavDropdown.Item>
         <NavDropdown.Item as={NavLink} to="/add-budget">Add Budget</NavDropdown.Item>
+        <NavDropdown.Divider />
+        <NavDropdown.Item as={NavLink} to="/subscriptions">Manage Subscriptions</NavDropdown.Item>
       </NavDropdown>
 
       <NavDropdown title={accountTitle} id="account-dropdown" align="end">

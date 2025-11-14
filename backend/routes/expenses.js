@@ -3,7 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth'); // <-- Import our middleware
 
 // Import the controller functions
-const { getExpenses, addExpense, deleteExpense } = require('../controllers/expenseController');
+const { getExpenses, addExpense, deleteExpense,updateExpense } = require('../controllers/expenseController');
 
 // --- Define Routes ---
 
@@ -16,6 +16,11 @@ router.get('/', auth, getExpenses);
 // @desc    Add a new expense
 // This route is also protected.
 router.post('/', auth, addExpense);
+
+// --- ADD THIS ROUTE ---
+// @route   PUT /api/expenses/:id
+// @desc    Update an expense
+router.put('/:id', auth, updateExpense);
 
 // @route   DELETE /api/expenses/:id
 // @desc    Delete an expense

@@ -15,7 +15,7 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound"; // <-- 1. Import the new page
-
+import Subscriptions from "./pages/Subscriptions";
 function App() {
   return (
     <>
@@ -32,9 +32,11 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/add-expense" element={<AddExpense />} />
+            <Route path="/edit-expense/:id" element={<AddExpense />} />
             <Route path="/add-budget" element={<AddBudget />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
           </Route>
           
           {/* --- 404 Not Found Route --- */}
