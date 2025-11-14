@@ -1,20 +1,18 @@
 // src/pages/Landing.jsx
 import React from "react";
 import { Container, Row, Col, Button, Card, Badge } from "react-bootstrap";
+// --- MODIFIED: Import Link ---
+import { Link } from "react-router-dom";
 
 /**
  * Make sure the image files exist:
- * public/assets/MarketingLanding.png
- * public/assets/landing-dashboard-preview.png   (small mock screenshot)
+ * public/assets/landing-dashboard-preview.png
  * public/assets/avatar1.jpg
  * public/assets/avatar2.jpg
- *
- * You can replace them with your own images/screenshots later.
  */
 
 function Hero() {
   return (
-    // give hero an id so navbar can link to /#about if needed
     <section id="about" className="landing-hero py-5">
       <Container>
         <Row className="align-items-center gy-4">
@@ -24,35 +22,40 @@ function Hero() {
               Track. Analyze. Grow Your Finances.
             </h1>
             <p className="lead text-muted">
-              A professional expense tracker that helps you manage business expenses effortlessly.
+              A professional expense tracker that helps you manage personal and
+              business expenses effortlessly.
             </p>
 
+            {/* --- MODIFIED: Buttons now link to pages --- */}
             <div className="d-flex gap-2 flex-wrap">
-              <Button size="lg" variant="primary">Get Started Free</Button>
-              <Button size="lg" variant="outline-success">
+              <Button size="lg" variant="primary" as={Link} to="/signup">
+                Get Started Free
+              </Button>
+              <Button size="lg" variant="outline-success" as={Link} to="/login">
                 <i className="bi bi-play-circle me-2"></i>View Demo
               </Button>
             </div>
+            {/* --- END MODIFICATION --- */}
 
             <div className="trusted mt-3 d-flex align-items-center text-muted">
               <i className="bi bi-shield-check me-2"></i>
-              <small>Trusted by 1,000+ businesses</small>
+              <small>Trusted by 1,000+ users</small>
             </div>
           </Col>
 
           <Col lg={6}>
             <Card className="preview-card shadow-sm">
-              <Card.Body className="p-4 d-flex align-items-center justify-content-center" style={{minHeight: 240}}>
+              <Card.Body
+                className="p-4 d-flex align-items-center justify-content-center"
+                style={{ minHeight: 240 }}
+              >
                 <img
                   src="/assets/landing-dashboard-preview.png"
                   alt="Dashboard preview"
                   className="img-fluid"
-                  style={{maxHeight: 220}}
                 />
               </Card.Body>
-              <Card.Footer className="bg-transparent border-0 text-muted small">
-                Swap with a real product screenshot
-              </Card.Footer>
+              {/* --- MODIFIED: Removed placeholder footer --- */}
             </Card>
           </Col>
         </Row>
@@ -80,19 +83,38 @@ function FeatureCard({ title, text, icon }) {
 }
 
 function Features() {
+  // --- MODIFIED: Updated feature list to be accurate ---
   const features = [
-    { title: "Smart Expense Tracking", text: "Auto-categorize and reconcile expenses in seconds.", icon: "bi-receipt" },
-    { title: "Detailed Analytics", text: "Visualize trends, profit, and spending patterns.", icon: "bi-graph-up" },
-    { title: "Custom Budgets", text: "Set limits, track progress, and avoid overspend.", icon: "bi-wallet2" },
-    { title: "Secure Cloud Sync", text: "Your data, encrypted and backed up automatically.", icon: "bi-cloud-check" }
+    {
+      title: "Smart Expense Tracking",
+      text: "Quickly log expenses and assign them to custom categories.",
+      icon: "bi-receipt",
+    },
+    {
+      title: "Detailed Analytics",
+      text: "Visualize spending trends and see exactly where your money goes.",
+      icon: "bi-graph-up",
+    },
+    {
+      title: "Custom Budgets",
+      text: "Set weekly, monthly, or yearly budgets to avoid overspending.",
+      icon: "bi-wallet2",
+    },
+    {
+      title: "Subscription Management",
+      text: "Track recurring bills and subscriptions so you never miss a payment.",
+      icon: "bi-calendar-check",
+    },
   ];
+  // --- END MODIFICATION ---
 
-  // add id so navbar anchors can target this section
   return (
     <section id="features" className="landing-features py-5">
       <Container>
-        <h3 className="mb-4">Features built for modern finance teams</h3>
-        <p className="text-muted mb-4">Flat, minimal, and powerful — the essentials you need without the clutter.</p>
+        <h3 className="mb-4">Features built for modern finance</h3>
+        <p className="text-muted mb-4">
+          All the essentials you need, without the clutter.
+        </p>
 
         <Row xs={1} md={2} lg={4} className="g-3">
           {features.map((f, i) => (
@@ -107,10 +129,23 @@ function Features() {
 }
 
 function HowItWorks() {
+  // --- MODIFIED: Replaced placeholder steps with real ones and icons ---
   const steps = [
-    { title: "Add Transactions", text: "Import from bank feeds or add manually.", placeholder: "Entry form sketch" },
-    { title: "Get Insights", text: "See real-time analytics and categories.", placeholder: "Charts sketch" },
-    { title: "Control Your Budget", text: "Set limits and track progress.", placeholder: "Budget bar sketch" }
+    {
+      title: "Log Your Expenses",
+      text: "Quickly add transactions and assign them to your custom categories.",
+      icon: "bi-plus-circle-dotted",
+    },
+    {
+      title: "Set Your Budgets",
+      text: "Create monthly or yearly budgets to keep your spending in check.",
+      icon: "bi-bullseye",
+    },
+    {
+      title: "Get Insights",
+      text: "See real-time analytics and reports on your spending habits.",
+      icon: "bi-pie-chart",
+    },
   ];
 
   return (
@@ -125,12 +160,17 @@ function HowItWorks() {
               <Card className="h-100 shadow-sm">
                 <Card.Body>
                   <div className="d-flex align-items-start">
-                    <Badge bg="light" text="dark" pill className="me-3">{idx + 1}</Badge>
+                    <Badge bg="light" text="dark" pill className="me-3 fs-6">
+                      {idx + 1}
+                    </Badge>
                     <div>
                       <h6 className="mb-1">{s.title}</h6>
                       <p className="text-muted small mb-3">{s.text}</p>
-                      <div className="placeholder-box rounded border d-flex align-items-center justify-content-center text-muted" style={{height: 90}}>
-                        {s.placeholder}
+                      {/* --- MODIFIED: Replaced placeholder box with icon --- */}
+                      <div className="text-center py-3">
+                        <i
+                          className={`${s.icon} display-4 text-primary opacity-50`}
+                        ></i>
                       </div>
                     </div>
                   </div>
@@ -143,51 +183,68 @@ function HowItWorks() {
     </section>
   );
 }
+// --- END MODIFICATION ---
 
 function Testimonials() {
   return (
     <section id="testimonials" className="testimonials py-5">
       <Container>
         <h4 className="mb-3">Loved by entrepreneurs</h4>
-        <p className="text-muted small">“It replaced spreadsheets and saved hours every week.”</p>
+        <p className="text-muted small">
+          “It replaced spreadsheets and saved hours every week.”
+        </p>
 
+        {/* --- MODIFIED: Removed the placeholder "pill" column --- */}
         <Row className="g-3 align-items-center">
-          <Col md={6}>
+          <Col md={8}>
             <div className="d-flex gap-3">
-              <Card className="p-3 shadow-sm" style={{minWidth: 220}}>
+              <Card
+                className="p-3 shadow-sm"
+                style={{ minWidth: 220, maxWidth: 300 }}
+              >
                 <div className="d-flex gap-2 align-items-center">
-                  <img src="/assets/avatar1.jpg" alt="user" className="rounded-circle" width="48" height="48" />
+                  <img
+                    src="/assets/avatar1.jpg"
+                    alt="user"
+                    className="rounded-circle"
+                    width="48"
+                    height="48"
+                  />
                   <div>
                     <strong>Alex R.</strong>
                     <div className="small text-muted">Founder, Northlane</div>
                   </div>
                 </div>
-                <p className="mt-3 small text-muted mb-0">ExpensePro gives us clarity on cash flow and spend in minutes.</p>
+                <p className="mt-3 small text-muted mb-0">
+                  ExpensePro gives us clarity on cash flow and spend in minutes.
+                </p>
               </Card>
 
-              <Card className="p-3 shadow-sm" style={{minWidth: 220}}>
+              <Card
+                className="p-3 shadow-sm"
+                style={{ minWidth: 220, maxWidth: 300 }}
+              >
                 <div className="d-flex gap-2 align-items-center">
-                  <img src="/assets/avatar2.jpg" alt="user" className="rounded-circle" width="48" height="48" />
+                  <img
+                    src="/assets/avatar2.jpg"
+                    alt="user"
+                    className="rounded-circle"
+                    width="48"
+                    height="48"
+                  />
                   <div>
                     <strong>Priya K.</strong>
                     <div className="small text-muted">COO, Finch</div>
                   </div>
                 </div>
-                <p className="mt-3 small text-muted mb-0">Clean, fast, and the analytics are spot on for board updates.</p>
+                <p className="mt-3 small text-muted mb-0">
+                  Clean, fast, and the analytics are spot on for board updates.
+                </p>
               </Card>
             </div>
           </Col>
-
-          <Col md={6}>
-            <div className="d-flex gap-2">
-              <div className="pill">A</div>
-              <div className="pill">B</div>
-              <div className="pill">C</div>
-              <div className="pill">D</div>
-              <div className="pill">E</div>
-            </div>
-          </Col>
         </Row>
+        {/* --- END MODIFICATION --- */}
       </Container>
     </section>
   );
@@ -195,36 +252,56 @@ function Testimonials() {
 
 function Pricing() {
   return (
-    // add id so navbar anchors can target pricing
     <section id="pricing" className="pricing py-5 bg-soft">
       <Container>
         <h4>Simple pricing that scales</h4>
-        <p className="text-muted mb-4">Start free. Upgrade when you’re ready.</p>
+        <p className="text-muted mb-4">
+          Start free. Upgrade when you’re ready.
+        </p>
 
         <Row className="g-3">
           <Col md={6}>
-            <Card className="p-4 shadow-sm">
+            <Card className="p-4 shadow-sm h-100">
               <h6 className="mb-1">Free</h6>
-              <h3 className="fw-bold">$0<span className="text-muted fs-6">/mo</span></h3>
+              <h3 className="fw-bold">
+                $0<span className="text-muted fs-6">/mo</span>
+              </h3>
               <ul className="list-unstyled mt-3 mb-3 text-muted small">
-                <li>✓ Up to 2 bank connections</li>
-                <li>✓ Basic analytics</li>
-                <li>✓ Export CSV</li>
+                <li>✓ Unlimited Expense Tracking</li>
+                <li>✓ Custom Categories</li>
+                <li>✓ Basic Analytics</li>
               </ul>
-              <Button variant="light">Choose Free</Button>
+              <Button
+                variant="light"
+                className="mt-auto"
+                as={Link}
+                to="/signup"
+              >
+                Choose Free
+              </Button>
             </Card>
           </Col>
 
           <Col md={6}>
-            <Card className="p-4 shadow-sm">
+            <Card className="p-4 shadow-sm h-100">
               <h6 className="mb-1">Pro</h6>
-              <h3 className="fw-bold">$19<span className="text-muted fs-6">/mo</span></h3>
+              <h3 className="fw-bold">
+                $19<span className="text-muted fs-6">/mo</span>
+              </h3>
               <ul className="list-unstyled mt-3 mb-3 text-muted small">
-                <li>✓ Unlimited connections</li>
-                <li>✓ Advanced analytics & budgets</li>
-                <li>✓ Priority support</li>
+                <li>✓ Everything in Free</li>
+                <li>✓ Advanced Analytics & Budgets</li>
+                <li>✓ Subscription Management</li>
+                <li>✓ Priority Support</li>
               </ul>
-              <Button variant="primary">Start Pro Trial</Button>
+              <Button
+                variant="primary"
+                className="mt-auto"
+                as={Link}
+                to="/signup"
+              >
+                Start Pro Trial
+              </Button>
             </Card>
           </Col>
         </Row>
