@@ -17,6 +17,7 @@ export default function Dashboard() {
 
   // --- Add this handler ---
   const handleDelete = async (id) => {
+    // We will replace window.confirm later
     if (window.confirm("Are you sure you want to delete this expense?")) {
       await deleteExpense(id);
     }
@@ -81,15 +82,18 @@ export default function Dashboard() {
             <p className="text-muted">No expenses yet. Add your first expense to get started.</p>
           ) : (
             <Table hover responsive>
+              {/* --- THIS IS THE FIX --- */}
+              {/* Removed comments from inside <tr> */}
               <thead>
                 <tr>
                   <th>Date</th>
                   <th>Description</th>
                   <th>Category</th>
                   <th>Amount</th>
-                  <th>Actions</th> {/* <-- Add Actions header */}
+                  <th>Actions</th>
                 </tr>
               </thead>
+              {/* --- END OF FIX --- */}
               <tbody>
                 {expenses.slice(0, 10).map((exp) => (
                   <tr key={exp._id}> 
@@ -98,7 +102,6 @@ export default function Dashboard() {
                     <td><span className="badge bg-secondary">{exp.category}</span></td>
                     <td>${exp.amount?.toFixed(2)}</td>
                     <td>
-                      {/* --- Add Delete Button --- */}
                       <Button 
                         variant="danger" 
                         size="sm" 

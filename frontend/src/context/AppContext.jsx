@@ -29,6 +29,7 @@ function appReducer(state, action) {
       localStorage.removeItem("token");
       return {
         ...initialState,
+        token: null, // Ensure token is cleared from state
         isLoading: false,
       };
     case "USER_LOADED": // <-- New case
@@ -42,6 +43,7 @@ function appReducer(state, action) {
       localStorage.removeItem("token");
       return {
         ...initialState,
+        token: null, // Ensure token is cleared from state
         isLoading: false,
       };
     case "USER_UPDATE_SUCCESS": // <-- New case
@@ -83,15 +85,13 @@ function appReducer(state, action) {
   }
 }
 
-// ... (initialState and appReducer are the same as before) ...
-
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  
-  // --- NEW: Wrap all functions in useCallback ---
-useEffect(() => {
+ 
+  useEffect(() => {
     document.documentElement.setAttribute('data-bs-theme', state.theme);
   }, [state.theme]);
+
   const loadUser = useCallback(async () => {
     if (localStorage.token) {
       try {
@@ -103,7 +103,7 @@ useEffect(() => {
     } else {
       dispatch({ type: 'STOP_LOADING' });
     }
-  }, []); // Empty dependency array means this function never changes
+  }, []);
 
   useEffect(() => {
     loadUser();
@@ -112,14 +112,25 @@ useEffect(() => {
   const register = useCallback(async (name, email, password) => {
     const res = await api.post("/auth/register", { name, email, password });
     dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
-    await loadUser();
-  }, [loadUser]); // Depends on loadUser
+    await loadUser(); // <-- This line fetches user data
+  }, [loadUser]);
 
   const login = useCallback(async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
     dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
-    await loadUser();
-  }, [loadUser]); // Depends on loadUser
+    await loadUser(); // <-- This line fetches user data
+  }, [loadUser]);
+
+  const loginWithGoogle = useCallback(async (googleToken) => {
+    try {
+      const res = await api.post('/auth/google-login', { token: googleToken });
+      dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
+      await loadUser(); // <-- This line fetches user data
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response.data.msg });
+      throw err; 
+    }
+  }, [loadUser]);
 
   const logout = useCallback(() => {
     dispatch({ type: "LOGOUT" });
@@ -191,18 +202,20 @@ useEffect(() => {
       throw err;
     }
   }, []);
-const toggleTheme = useCallback(() => {
+
+  const toggleTheme = useCallback(() => {
     dispatch({ type: 'SET_THEME' });
   }, []);
+
   const clearError = useCallback(() => dispatch({ type: 'CLEAR_ERROR' }), []);
 
-  // --- End of useCallback updates ---
-
+  // --- This 'value' object is now complete and correct ---
   const value = {
     ...state,
     toggleTheme,
     register,
     login,
+    loginWithGoogle,
     logout,
     loadUser,
     updateUserDetails,
