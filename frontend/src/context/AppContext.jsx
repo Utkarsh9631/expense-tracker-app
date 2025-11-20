@@ -13,6 +13,8 @@ const initialState = {
   budgets: [],
   categories: [],
   recurring: [],
+  notifications: [], // <-- Added
+  unreadCount: 0,    // <-- Added
   appError: null,
   theme: localStorage.getItem("theme") || "light",
 };
@@ -87,12 +89,12 @@ function appReducer(state, action) {
       return { ...state, budgets: action.payload };
     case "ADD_BUDGET":
       return { ...state, budgets: [action.payload, ...state.budgets] };
-    case "DELETE_BUDGET": // <-- Added
+    case "DELETE_BUDGET":
       return {
         ...state,
         budgets: state.budgets.filter((b) => b._id !== action.payload),
       };
-    case "UPDATE_BUDGET": // <-- Added
+    case "UPDATE_BUDGET":
       return {
         ...state,
         budgets: state.budgets.map((b) =>
@@ -119,6 +121,24 @@ function appReducer(state, action) {
         ...state,
         recurring: state.recurring.filter((r) => r._id !== action.payload),
       };
+
+    // --- NOTIFICATION CASES (NEW) ---
+    case "SET_NOTIFICATIONS": {
+      const unread = action.payload.filter(n => !n.isRead).length;
+      return { ...state, notifications: action.payload, unreadCount: unread };
+    }
+    case "MARK_READ": {
+      const updatedNotifs = state.notifications.map(n => 
+        n._id === action.payload ? { ...n, isRead: true } : n
+      );
+      return { 
+        ...state, 
+        notifications: updatedNotifs, 
+        unreadCount: updatedNotifs.filter(n => !n.isRead).length 
+      };
+    }
+    case "CLEAR_NOTIFICATIONS":
+      return { ...state, notifications: [], unreadCount: 0 };
 
     case "DATA_ERROR":
       return { ...state, appError: action.payload };
@@ -199,19 +219,16 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-const getExpenses = useCallback(async (filters = {}) => {
+  const getExpenses = useCallback(async (filters = {}) => {
     try {
-      // Convert the filters object to a query string (e.g., ?startDate=2023-01-01&endDate=2023-01-31)
       const params = new URLSearchParams(filters).toString();
-      
-      // Append params to the URL
       const res = await api.get(`/expenses?${params}`);
-      
       dispatch({ type: 'SET_EXPENSES', payload: res.data });
     } catch (err) {
       dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
     }
   }, []);
+
   const addExpense = useCallback(async (expenseData) => {
     try {
       const res = await api.post('/expenses', expenseData);
@@ -261,7 +278,6 @@ const getExpenses = useCallback(async (filters = {}) => {
     }
   }, []);
 
-  // --- NEW BUDGET ACTIONS ---
   const deleteBudget = useCallback(async (id) => {
     try {
       await api.delete(`/budgets/${id}`);
@@ -280,7 +296,6 @@ const getExpenses = useCallback(async (filters = {}) => {
       throw err;
     }
   }, []);
-  // --------------------------
 
   const getCategories = useCallback(async () => {
     try {
@@ -349,6 +364,44 @@ const getExpenses = useCallback(async (filters = {}) => {
     }
   }, []);
 
+  // --- NOTIFICATION ACTIONS (NEW) ---
+  const getNotifications = useCallback(async () => {
+    try {
+      const res = await api.get('/notifications');
+      dispatch({ type: 'SET_NOTIFICATIONS', payload: res.data });
+    } catch (err) {
+      // Fail silently in background
+      console.error("Failed to fetch notifications");
+    }
+  }, []);
+
+  const markAsRead = useCallback(async (id) => {
+    try {
+      await api.put(`/notifications/${id}/read`);
+      dispatch({ type: 'MARK_READ', payload: id });
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+  
+  const clearNotifications = useCallback(async () => {
+    try {
+      await api.delete('/notifications');
+      dispatch({ type: 'CLEAR_NOTIFICATIONS' });
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  // Poll for notifications every 60s
+  useEffect(() => {
+    if (state.isAuthenticated) {
+      getNotifications();
+      const interval = setInterval(getNotifications, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [state.isAuthenticated, getNotifications]);
+
   const toggleTheme = useCallback(() => {
     dispatch({ type: 'SET_THEME' });
   }, []);
@@ -372,8 +425,8 @@ const getExpenses = useCallback(async (filters = {}) => {
     updateExpense,
     getBudgets,
     addBudget,
-    deleteBudget, // Exported
-    updateBudget, // Exported
+    deleteBudget, 
+    updateBudget, 
     getCategories,
     addCategory,
     deleteCategory,
@@ -381,6 +434,10 @@ const getExpenses = useCallback(async (filters = {}) => {
     addRecurring,
     deleteRecurring,
     processRecurringExpenses,
+    // New exports
+    getNotifications,
+    markAsRead,
+    clearNotifications,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

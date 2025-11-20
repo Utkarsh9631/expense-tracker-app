@@ -3,6 +3,8 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const cron = require('node-cron');
+const { checkBudgets } = require('./controllers/notificationController');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -16,7 +18,13 @@ const app = express();
 app.use(cors());
 // Parse incoming JSON requests
 app.use(express.json());
-
+app.use('/api/notifications', require('./routes/notifications'));// <-- Add Notification Route
+// --- Cron Job ---
+// Schedule the budget check to run every hour (0 * * * *)
+// You can change this to '*/5 * * * *' for every 5 minutes during testing
+cron.schedule('0 * * * *', () => {
+  checkBudgets();
+});
 // --- Basic Route ---
 // A test route to make sure the server is working
 app.get('/', (req, res) => {
