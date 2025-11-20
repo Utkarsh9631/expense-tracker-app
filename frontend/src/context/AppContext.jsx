@@ -7,13 +7,13 @@ const AppContext = createContext();
 const initialState = {
   isAuthenticated: false,
   token: localStorage.getItem("token"),
-  user: null, // <-- We will store the full user object here
+  user: null,
   isLoading: true,
   expenses: [],
   budgets: [],
   categories: [],
   recurring: [],
-  appError: null, // <-- Renamed 'error' to 'appError' for clarity
+  appError: null,
   theme: localStorage.getItem("theme") || "light",
 };
 
@@ -25,35 +25,35 @@ function appReducer(state, action) {
         ...state,
         isAuthenticated: true,
         token: action.payload.token,
-        isLoading: false, // Stop loading, user will be fetched next
+        isLoading: false,
       };
     case "LOGOUT":
       localStorage.removeItem("token");
       return {
         ...initialState,
-        token: null, // Ensure token is cleared from state
+        token: null,
         isLoading: false,
       };
-    case "USER_LOADED": // <-- New case
+    case "USER_LOADED":
       return {
         ...state,
         isAuthenticated: true,
         user: action.payload,
         isLoading: false,
       };
-    case "AUTH_ERROR": // Fired on token fail or logout
+    case "AUTH_ERROR":
       localStorage.removeItem("token");
       return {
         ...initialState,
-        token: null, // Ensure token is cleared from state
+        token: null,
         isLoading: false,
       };
-    case "USER_UPDATE_SUCCESS": // <-- New case
+    case "USER_UPDATE_SUCCESS":
       return {
         ...state,
         user: action.payload,
       };
-    case "STOP_LOADING": // Fired if no token
+    case "STOP_LOADING":
       return {
         ...state,
         isLoading: false,
@@ -67,7 +67,6 @@ function appReducer(state, action) {
         ...state,
         expenses: state.expenses.filter((exp) => exp._id !== action.payload),
       };
-    // --- ADD THIS CASE ---
     case "UPDATE_EXPENSE":
       return {
         ...state,
@@ -75,7 +74,6 @@ function appReducer(state, action) {
           exp._id === action.payload._id ? action.payload : exp
         ),
       };
-    // --- END OF ADDED CASE ---
     case "SET_THEME":
       const newTheme = state.theme === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', newTheme);
@@ -83,12 +81,25 @@ function appReducer(state, action) {
         ...state,
         theme: newTheme,
       };
+      
+    // --- BUDGET CASES ---
     case "SET_BUDGETS":
       return { ...state, budgets: action.payload };
     case "ADD_BUDGET":
       return { ...state, budgets: [action.payload, ...state.budgets] };
+    case "DELETE_BUDGET": // <-- Added
+      return {
+        ...state,
+        budgets: state.budgets.filter((b) => b._id !== action.payload),
+      };
+    case "UPDATE_BUDGET": // <-- Added
+      return {
+        ...state,
+        budgets: state.budgets.map((b) =>
+          b._id === action.payload._id ? action.payload : b
+        ),
+      };
 
-    // --- ADD THESE CASES ---
     case "SET_CATEGORIES":
       return { ...state, categories: action.payload };
     case "ADD_CATEGORY":
@@ -98,9 +109,7 @@ function appReducer(state, action) {
         ...state,
         categories: state.categories.filter((cat) => cat._id !== action.payload),
       };
-    // --- END OF ADDED CASES ---
       
-      // --- ADD THESE CASES ---
     case "SET_RECURRING":
       return { ...state, recurring: action.payload };
     case "ADD_RECURRING":
@@ -110,11 +119,10 @@ function appReducer(state, action) {
         ...state,
         recurring: state.recurring.filter((r) => r._id !== action.payload),
       };
-    // --- END OF ADDED CASES ---
 
-    case "DATA_ERROR": // General data error
+    case "DATA_ERROR":
       return { ...state, appError: action.payload };
-    case "CLEAR_ERROR": // <-- New case
+    case "CLEAR_ERROR":
       return { ...state, appError: null };
     default:
       return state;
@@ -148,20 +156,20 @@ export function AppProvider({ children }) {
   const register = useCallback(async (name, email, password) => {
     const res = await api.post("/auth/register", { name, email, password });
     dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
-    await loadUser(); // <-- This line fetches user data
+    await loadUser();
   }, [loadUser]);
 
   const login = useCallback(async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
     dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
-    await loadUser(); // <-- This line fetches user data
+    await loadUser();
   }, [loadUser]);
 
   const loginWithGoogle = useCallback(async (googleToken) => {
     try {
       const res = await api.post('/auth/google-login', { token: googleToken });
       dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
-      await loadUser(); // <-- This line fetches user data
+      await loadUser();
     } catch (err) {
       dispatch({ type: 'DATA_ERROR', payload: err.response.data.msg });
       throw err; 
@@ -220,17 +228,15 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-  // --- ADD THIS FUNCTION ---
-const updateExpense = useCallback(async (id, expenseData) => {
-  try {
-    const res = await api.put(`/expenses/${id}`, expenseData);
-    dispatch({ type: "UPDATE_EXPENSE", payload: res.data });
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-    throw err; // Re-throw so the form can catch it
-  }
-}, []);
-// --- END OF ADDED FUNCTION ---
+  const updateExpense = useCallback(async (id, expenseData) => {
+    try {
+      const res = await api.put(`/expenses/${id}`, expenseData);
+      dispatch({ type: "UPDATE_EXPENSE", payload: res.data });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+      throw err;
+    }
+  }, []);
 
   const getBudgets = useCallback(async () => {
     try {
@@ -251,77 +257,93 @@ const updateExpense = useCallback(async (id, expenseData) => {
     }
   }, []);
 
-  // --- ADD THESE FUNCTIONS ---
-const getCategories = useCallback(async () => {
-  try {
-    const res = await api.get('/categories');
-    dispatch({ type: 'SET_CATEGORIES', payload: res.data });
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-  }
-}, []);
+  // --- NEW BUDGET ACTIONS ---
+  const deleteBudget = useCallback(async (id) => {
+    try {
+      await api.delete(`/budgets/${id}`);
+      dispatch({ type: "DELETE_BUDGET", payload: id });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    }
+  }, []);
 
-const addCategory = useCallback(async (name) => {
-  try {
-    const res = await api.post('/categories', { name });
-    dispatch({ type: 'ADD_CATEGORY', payload: res.data });
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-    throw err;
-  }
-}, []);
+  const updateBudget = useCallback(async (id, budgetData) => {
+    try {
+      const res = await api.put(`/budgets/${id}`, budgetData);
+      dispatch({ type: "UPDATE_BUDGET", payload: res.data });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+      throw err;
+    }
+  }, []);
+  // --------------------------
 
-const deleteCategory = useCallback(async (id) => {
-  try {
-    await api.delete(`/categories/${id}`);
-    dispatch({ type: 'DELETE_CATEGORY', payload: id });
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-    throw err;
-  }
-}, []);
-// --- END OF ADDED FUNCTIONS ---
+  const getCategories = useCallback(async () => {
+    try {
+      const res = await api.get('/categories');
+      dispatch({ type: 'SET_CATEGORIES', payload: res.data });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    }
+  }, []);
 
-  // --- ADD THESE FUNCTIONS ---
-const getRecurring = useCallback(async () => {
-  try {
-    const res = await api.get('/recurring');
-    dispatch({ type: 'SET_RECURRING', payload: res.data });
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-  }
-}, []);
+  const addCategory = useCallback(async (name) => {
+    try {
+      const res = await api.post('/categories', { name });
+      dispatch({ type: 'ADD_CATEGORY', payload: res.data });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+      throw err;
+    }
+  }, []);
 
-const addRecurring = useCallback(async (data) => {
-  try {
-    const res = await api.post('/recurring', data);
-    dispatch({ type: 'ADD_RECURRING', payload: res.data });
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-    throw err;
-  }
-}, []);
+  const deleteCategory = useCallback(async (id) => {
+    try {
+      await api.delete(`/categories/${id}`);
+      dispatch({ type: 'DELETE_CATEGORY', payload: id });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+      throw err;
+    }
+  }, []);
 
-const deleteRecurring = useCallback(async (id) => {
-  try {
-    await api.delete(`/recurring/${id}`);
-    dispatch({ type: 'DELETE_RECURRING', payload: id });
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-    throw err;
-  }
-}, []);
+  const getRecurring = useCallback(async () => {
+    try {
+      const res = await api.get('/recurring');
+      dispatch({ type: 'SET_RECURRING', payload: res.data });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    }
+  }, []);
 
-const processRecurringExpenses = useCallback(async () => {
-  try {
-    // This just tells the backend to work its magic
-    const res = await api.post('/recurring/process');
-    return res.data; // Returns { msg: '...', expensesCreated: N }
-  } catch (err) {
-    dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
-  }
-}, []);
-// --- END OF ADDED FUNCTIONS ---
+  const addRecurring = useCallback(async (data) => {
+    try {
+      const res = await api.post('/recurring', data);
+      dispatch({ type: 'ADD_RECURRING', payload: res.data });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+      throw err;
+    }
+  }, []);
+
+  const deleteRecurring = useCallback(async (id) => {
+    try {
+      await api.delete(`/recurring/${id}`);
+      dispatch({ type: 'DELETE_RECURRING', payload: id });
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+      throw err;
+    }
+  }, []);
+
+  const processRecurringExpenses = useCallback(async () => {
+    try {
+      const res = await api.post('/recurring/process');
+      return res.data; 
+    } catch (err) {
+      dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
+    }
+  }, []);
 
   const toggleTheme = useCallback(() => {
     dispatch({ type: 'SET_THEME' });
@@ -329,7 +351,6 @@ const processRecurringExpenses = useCallback(async () => {
 
   const clearError = useCallback(() => dispatch({ type: 'CLEAR_ERROR' }), []);
 
-  // --- This 'value' object is now complete and correct ---
   const value = {
     ...state,
     toggleTheme,
@@ -347,6 +368,8 @@ const processRecurringExpenses = useCallback(async () => {
     updateExpense,
     getBudgets,
     addBudget,
+    deleteBudget, // Exported
+    updateBudget, // Exported
     getCategories,
     addCategory,
     deleteCategory,

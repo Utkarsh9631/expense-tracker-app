@@ -16,10 +16,11 @@ exports.getExpenses = async (req, res) => {
   }
 };
 
-// @desc    Add a new expense for a user
-// @route   POST /api/expenses
+// ... imports
+
 exports.addExpense = async (req, res) => {
-  const { description, amount, category, date } = req.body;
+  // 1. Destructure 'type' from the body
+  const { description, amount, category, date, type } = req.body;
 
   try {
     const newExpense = new Expense({
@@ -27,7 +28,8 @@ exports.addExpense = async (req, res) => {
       amount,
       category,
       date,
-      user: req.user.id, // <-- Here we link the expense to the user
+      type: type || 'expense', // Default to expense if not provided
+      user: req.user.id,
     });
 
     const expense = await newExpense.save();
@@ -38,41 +40,34 @@ exports.addExpense = async (req, res) => {
   }
 };
 
-// --- ADD THIS FUNCTION ---
-// @desc    Update an expense
-// @route   PUT /api/expenses/:id
 exports.updateExpense = async (req, res) => {
-  const { description, amount, category, date } = req.body;
+  // 1. Destructure 'type' here too
+  const { description, amount, category, date, type } = req.body;
 
   try {
     let expense = await Expense.findById(req.params.id);
 
-    if (!expense) {
-      return res.status(404).json({ msg: 'Expense not found' });
-    }
+    if (!expense) return res.status(404).json({ msg: 'Expense not found' });
+    if (expense.user.toString() !== req.user.id) return res.status(401).json({ msg: 'Not authorized' });
 
-    // Ensure user owns the expense
-    if (expense.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
-    // Update the fields
+    // 2. Update fields
     expense.description = description || expense.description;
     expense.amount = amount || expense.amount;
     expense.category = category || expense.category;
     expense.date = date || expense.date;
+    // Update type if provided
+    if (type) expense.type = type; 
 
     const updatedExpense = await expense.save();
     res.json(updatedExpense);
 
   } catch (err) {
     console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Expense not found' });
-    }
     res.status(500).send('Server Error');
   }
 };
+
+// ... rest of the file (getExpenses, deleteExpense) remains the same
 
 // @desc    Delete an expense
 // @route   DELETE /api/expenses/:id
