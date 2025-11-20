@@ -1,13 +1,27 @@
 const Expense = require('../models/Expense');
 
-// @desc    Get all expenses for a user
+// @desc    Get all expenses for a user (with optional date filtering)
 // @route   GET /api/expenses
 exports.getExpenses = async (req, res) => {
   try {
-    // This is the magic!
-    // We find expenses where the 'user' field matches the ID
-    // from our auth middleware (req.user.id).
-    const expenses = await Expense.find({ user: req.user.id }).sort({ date: -1 });
+    const { startDate, endDate } = req.query;
+
+    // Build the query object
+    let query = { user: req.user.id };
+
+    // If dates are provided, add date filter to the query
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) {
+        query.date.$gte = new Date(startDate); // Greater than or equal to start date
+      }
+      if (endDate) {
+        query.date.$lte = new Date(endDate);   // Less than or equal to end date
+      }
+    }
+
+    // Find expenses matching the query
+    const expenses = await Expense.find(query).sort({ date: -1 });
     
     res.json(expenses);
   } catch (err) {

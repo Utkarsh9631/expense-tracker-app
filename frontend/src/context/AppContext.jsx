@@ -199,15 +199,19 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-  const getExpenses = useCallback(async () => {
+const getExpenses = useCallback(async (filters = {}) => {
     try {
-      const res = await api.get('/expenses');
+      // Convert the filters object to a query string (e.g., ?startDate=2023-01-01&endDate=2023-01-31)
+      const params = new URLSearchParams(filters).toString();
+      
+      // Append params to the URL
+      const res = await api.get(`/expenses?${params}`);
+      
       dispatch({ type: 'SET_EXPENSES', payload: res.data });
     } catch (err) {
       dispatch({ type: 'DATA_ERROR', payload: err.response?.data?.msg });
     }
   }, []);
-
   const addExpense = useCallback(async (expenseData) => {
     try {
       const res = await api.post('/expenses', expenseData);

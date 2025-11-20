@@ -1,6 +1,6 @@
 // src/pages/Analytics.jsx
-import React, { useEffect, useMemo } from "react";
-import { Card, Row, Col, Spinner } from "react-bootstrap";
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, Row, Col, Spinner, Form, Button } from "react-bootstrap";
 import { useAppContext } from "../context/AppContext";
 import {
   Chart as ChartJS,
@@ -28,6 +28,12 @@ ChartJS.register(
 export default function Analytics() {
   const { expenses, getExpenses, getBudgets, isLoading, theme } = useAppContext();
 
+  // --- DATE FILTER STATE ---
+  const [dateRange, setDateRange] = useState({
+    startDate: "",
+    endDate: ""
+  });
+
   useEffect(() => {
     if (expenses.length === 0) {
       getExpenses();
@@ -35,6 +41,19 @@ export default function Analytics() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // --- HANDLERS ---
+  const handleFilter = () => {
+    getExpenses({ 
+      startDate: dateRange.startDate, 
+      endDate: dateRange.endDate 
+    });
+  };
+
+  const handleClear = () => {
+    setDateRange({ startDate: "", endDate: "" });
+    getExpenses(); // Fetch all without filters
+  };
 
   // --- THEME CONFIGURATION ---
   const textColor = theme === 'dark' ? '#e0e0e0' : '#666666';
@@ -83,6 +102,9 @@ export default function Analytics() {
     // 4. Bar Chart Data
     const monthsMap = new Map();
     const today = new Date();
+    // Note: If filtering by a custom range, these labels might need adjustment 
+    // to match the specific range, but sticking to last 6 months relative to "today" 
+    // is a safe default for the trend chart unless we rewrite the chart logic deeply.
     for (let i = 5; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
       const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
@@ -92,6 +114,8 @@ export default function Analytics() {
     expenses.forEach((exp) => {
       const d = new Date(exp.date);
       const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+      // Only map it if it falls within our generated months keys 
+      // (This keeps the bar chart clean for the standard view)
       if (monthsMap.has(key)) {
         const current = monthsMap.get(key);
         if (exp.type === 'income') {
@@ -161,6 +185,40 @@ export default function Analytics() {
     <div>
       <h2 className="mb-4">Financial Analytics</h2>
 
+      {/* --- Date Filter Controls --- */}
+      <Card className="mb-4 shadow-sm p-3">
+        <Row className="align-items-end g-3">
+          <Col md={4}>
+            <Form.Group>
+              <Form.Label>Start Date</Form.Label>
+              <Form.Control 
+                type="date" 
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group>
+              <Form.Label>End Date</Form.Label>
+              <Form.Control 
+                type="date" 
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4} className="d-flex gap-2">
+            <Button variant="primary" className="flex-grow-1" onClick={handleFilter}>
+              Filter Data
+            </Button>
+            <Button variant="outline-secondary" onClick={handleClear}>
+              Reset
+            </Button>
+          </Col>
+        </Row>
+      </Card>
+
       <Row className="g-4 mb-4">
         {/* --- Income vs Expense Trend --- */}
         <Col lg={8}>
@@ -203,7 +261,7 @@ export default function Analytics() {
         </Col>
       </Row>
 
-      {/* --- RESTORED SUMMARY SECTION --- */}
+      {/* --- SUMMARY SECTION --- */}
       <Row className="g-3">
         <Col md={4}>
           <Card className="shadow-sm border-start border-4 border-info">
@@ -216,7 +274,7 @@ export default function Analytics() {
         <Col md={4}>
           <Card className="shadow-sm border-start border-4 border-warning">
             <Card.Body>
-              <small className="text-muted">Total Spent (All Time)</small>
+              <small className="text-muted">Total Spent {dateRange.startDate ? "(Selected Period)" : "(All Time)"}</small>
               <h4>${summaryStats ? summaryStats.totalSpent.toFixed(2) : "0.00"}</h4>
             </Card.Body>
           </Card>
