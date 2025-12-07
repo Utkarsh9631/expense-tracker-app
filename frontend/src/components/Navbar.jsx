@@ -98,6 +98,17 @@ export default function NavbarComp() {
       <Nav.Link as={NavLink} to="/dashboard">Dashboard</Nav.Link>
       <Nav.Link as={NavLink} to="/analytics">Analytics</Nav.Link>
       
+      {/* --- ADDED: Upload CSV Button --- */}
+      <Button 
+        href="https://smartfinanceai1-1.onrender.com/" 
+        target="_blank" 
+        variant="outline-primary" 
+        size="sm" 
+        className="ms-2 d-flex align-items-center"
+      >
+        Upload CSV
+      </Button>
+      
       {/* Notification Bell */}
       {notificationDropdown}
 
